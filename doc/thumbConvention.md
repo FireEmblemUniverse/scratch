@@ -47,6 +47,7 @@ If we imagine we're at the start of a function, we can suppose a few things.
 It sounds like we need an agreement between the function we're starting and our parent function on how to handle these. This is where convention comes in.
 And that same convention will dictate how we deal with subroutines of our own. In that sense, our convention is recursive in nature.
 
+#### Parameters
 Let's start our function:
 ```
 FuncStart:
@@ -58,7 +59,7 @@ FuncStart:
 @ Right now, r0 has the unit pointer given to us by the parent function.
 ```
 If we want to use another parameter, that will be in r1. The next would be in r2, but what if we have more than 4?
-```arm
+```
 FuncStart:
 @ Our first 4 parameters are held right now in r0-r3. Any parameters beyond the fourth are held in the stack.
 ...
@@ -66,6 +67,7 @@ ldr r0, [ sp ] @ If I want to access the 5th parameter (suppose I haven't shifte
 ldr r0, [ sp, #0x04 ] @ This is the 6th parameter, etc.
 ```
 
+#### Pushing lo nonscratch registers
 This presents a problem, however. If our parameters are in r0-r3, registers that we want for arithmetic and intermediate operations, they're in the way!
 To solve this, we (generally) put our parameters in non-reserved higher registers and the stack.
 But... those registers are not scratch. That is, our parent function expects us to put them back the way they we found them. To do this, we use `push` and `pop`.
@@ -79,6 +81,7 @@ mov r4, r0 @ Now that r4 is saved elsewhere, we can use it too for our parameter
 Now here's the beauty of this convention. Because r4 is nonscratch, if _we_ want to call a subroutine, we expect the subroutine not to change r4. Convenient!
 Popping registers back into place will be covered later.
 
+#### Preparing for subroutines
 Sepaking of subroutines, there's also something we need to do if we plan on calling one.
 At the start of our function, r14 contains our return point for when we're finished.
 We're gonna need that; however, a subroutine will need to change r14 to remember _its_ return point.
@@ -92,6 +95,8 @@ If we want to push more registers, we can do
 FuncStart:
 push { r4 - r6, lr } @ For example, this pushes r4, r5, r6, and r14.
 ```
+
+#### Hi registers
 
 ### Functions - finishing up
 wip
