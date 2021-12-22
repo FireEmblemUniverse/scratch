@@ -10,7 +10,7 @@ I'm going to expect that the reader has a decent understanding of thumb, and I r
 It probably is unless you're me... which seems unlikely. Convention is cool and very useful!
 While there are many things that you CAN do in thumb, that doesn't mean you SHOULD do them.
 Convention constitutes a set of rules that people and compilers follow. With these rules, you can have solid expectations about how functions work and how to use them.
-The convention that I will cover closely matches vanilla FEGBA plus some extenstions that are useful for hacking.
+The convention that I will cover closely matches vanilla FEGBA plus some extensions that are useful for hacking.
 
 ## Things always to do and not to do
 
@@ -33,7 +33,7 @@ The most important takeaways here are _Scratch_, _Nonscratch_, and _Reserved_.
  - Scratch: A subroutine is NOT expected to maintain this register.
  - Nonscratch: A subroutine IS expected to maintain this register.
  - Reserved: You should not try to modify these registers directly.
-These terms should make a little more sense when we get to sett ing up and finishing up functions.
+These terms should make a little more sense when we get to setting up and finishing up functions.
 
 ### Functions - setting up
 By "functions," I mean _standard_ functions. That is, a function that a compiler would generate. These functions have clear entry points and clear returns.
@@ -52,7 +52,7 @@ Let's start our function:
 ```
 FuncStart:
 ``` 
-What if we want some _parameters_? Our convention dictates that paramaters are passed in through r0, then r1, then r2, then r3, then in the stack.
+What if we want some _parameters_? Our convention dictates that parameters are passed in through r0, then r1, then r2, then r3, then in the stack.
 If our function has one parameter, say... a unit struct pointer...
 ```
 FuncStart:
@@ -118,17 +118,76 @@ Maybe a subroutine you need has more than 4 parameters.
 Whatever you want to do, here's how you allocate stack space:
 ```
 FuncStart:
-push { r4, r5, lr }
 @ Finish pushing all of your registers.
 sub sp, sp, #0x10 @ This will allocate 0x10 bytes of the stack for you.
 ```
 The stack is weird because it grows backwards. Don't worry about it. The consequence of this is that we subtract from the stack pointer to give ourselves room to work with.
 
 ### Functions - finishing up
-wip
+So you've set up your function and you've finished doing whatever your function does. Great! Now what? We have conventions that dictate exactly how to end a function.
+
+1. Did you allocate any stack space?
+	- `add sp, sp, #XX` where `XX` is how much space you allocated. From my example in setting up, this would be `add, sp, sp, #0x10`.
+2. Did you push any hi registers?
+	- `pop` into a lower register and `mov` each value back into the correct hi register. This is backwards of setting up hi registers.
+3. Did you push any lo registers?
+	- `pop` them back _except_ lr
+4. Perform the appropriate return style I'm about to describe.
+
+For example, if I want to set up my return with 2 high registers and 0x10 bytes stack allocation, I would do:
+```
+add sp, sp, #0x10
+@ This following step is NOT popping what was in r4 and r5 back. This is popping what was in r8 and r9 into r4 and r5. Recall that we can't pop directly into hi registers.
+pop { r4, r5 } @ If I'm at the end of my function, I shouldn't need my nonscratch registers anymore.
+mov r8, r4 @ This resets r8 to what it was before.
+mov r9, r5 @ This resets r9 to what it was before.
+pop { r4 - r7 } @ Suppose I pushed r4 - r7 at the start. Now I can pop them all back.
+```
+
+Finally, we handle the return itself.
+
+*In all cases, your return value should be in r0!*
+The only exception to returning a value not in r0 that is defined by convention is returning a `long long`, a 64 bit variable, which you should never really do.
+I think something else dumb happens if you try to return a structure instead of a pointer to a structure but don't do that either.
+
+If you find yourself needing to return more than one value, consider:
+ - Bitpacking your return into one r0. You have 32 bits to work with. If you can return 2 shorts in r0, that's fine.
+ - Don't return a value. Instead, have your function accept a pointer to RAM and fill it with things. Vanilla support routines do this, for example.
+ - Refactor your code. It's also likely that there is a more elegant way to design your system.
+
+These cases depend on whether you're returning something and whether you pushed lr in preparation for a subroutine.
+#### If you did not push lr
+All you need to do is:
+```
+bx lr
+```
+This case does not depend on whether you have a return value.
+#### If you did push lr and you do not have a return value
+`pop` what was in lr at the start of your function into r0, then `bx r0`
+```
+pop { r0 }
+bx r0
+```
+### If you did push lr and you do have a return value
+Same as the previous case, except `pop` into and `bx` with r1 so that you don't clobber r0.
+```
+pop { r1 }
+bx r1
+```
+
+*Why is keeping these return cases consistent important? Why wouldn't I always return with r1, or r3 or something?*
+
+The answer to this is evident if you've ever researched/debugged at the assembly level.
+If you're unsure exactly what a function does, this convention leaves clues for a human to figure out the return signature.
+If you're working in a debugger and you see what an unknown function returns with its return address in r0, you know it has no return value.
+If you're glancing at another function's return and see that it uses r1 to return, you know for sure that it does have a return value.
+One of the biggest benefits of consistent convention is that a skilled human can glean numerous clues about a function's behavior from otherwise indecipherable machine code. 
 
 ## Things you really really should do
 wip
 
 ## Helpful methods - keep it consistent! 
+wip
+
+## An example function
 wip
