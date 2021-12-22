@@ -137,7 +137,8 @@ So you've set up your function and you've finished doing whatever your function 
 For example, if I want to set up my return with 2 high registers and 0x10 bytes stack allocation, I would do:
 ```
 add sp, sp, #0x10
-@ This following step is NOT popping what was in r4 and r5 back. This is popping what was in r8 and r9 into r4 and r5. Recall that we can't pop directly into hi registers.
+@ This following step is NOT popping what was in r4 and r5 back.
+@ This is popping what was in r8 and r9 into r4 and r5. Recall that we can't pop directly into hi registers.
 pop { r4, r5 } @ If I'm at the end of my function, I shouldn't need my nonscratch registers anymore.
 mov r8, r4 @ This resets r8 to what it was before.
 mov r9, r5 @ This resets r9 to what it was before.
