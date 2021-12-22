@@ -43,6 +43,7 @@ If we imagine we're at the start of a function, we can suppose a few things.
  - We... probably have a parent function? Yes, someone has called us to do something. It expects some things of us (think scratch registers).
  - It might have given us some information to work with. Parameters!
  - It might expect we give it something back. A return value!
+ 
 It sounds like we need an agreement between the function we're starting and our parent function on how to handle these. This is where convention comes in.
 And that same convention will dictate how we deal with subroutines of our own. In that sense, our convention is recursive in nature.
 
@@ -57,7 +58,7 @@ FuncStart:
 @ Right now, r0 has the unit pointer given to us by the parent function.
 ```
 If we want to use another parameter, that will be in r1. The next would be in r2, but what if we have more than 4?
-```
+```arm
 FuncStart:
 @ Our first 4 parameters are held right now in r0-r3. Any parameters beyond the fourth are held in the stack.
 ...
