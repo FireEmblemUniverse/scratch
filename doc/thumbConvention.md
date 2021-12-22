@@ -96,7 +96,33 @@ FuncStart:
 push { r4 - r6, lr } @ For example, this pushes r4, r5, r6, and r14.
 ```
 
-#### Hi registers
+#### Pushing hi registers and allocating stack space
+What do you do if you run out of places to put variables? What if you've used up r4 - r7 but need more long term storage? Use hi registers!
+Unfortunately, pushing hi registers is a little bit more of a headache because of the limited nature of the thumb set.
+Instructions are only a short, so possible opcodes are fairly limited. Operations with hi registers are limited, so use r4 - r7 first.
+
+There are no opcodes defined for pushing r8 and higher directly. To get around this, we can use an intermediate lower register:
+```
+FuncStart: @ Say you plan on using r8 and r9.
+push { r4 - r7, lr } @ I'm assuming you plan on using r4 - r7 as well.
+mov r4, r8 @ Move what is currently in r8 and r9 into lower registers that we've already pushed.
+mov r5, r9
+push { r4, r5 } @ Now push what was in r8 and r9 for retrieval later.
+```
+
+And what's this about the stack? Doesn't `push` already do stuff with the stack for me?
+Yes it does, but there are many reasons why you may want to allocate stack space for yourself otherwise.
+You might need more variables than your registers allow.
+You might need an area of RAM for a working `struct` variable.
+Maybe a subroutine you need has more than 4 parameters.
+Whatever you want to do, here's how you allocate stack space:
+```
+FuncStart:
+push { r4, r5, lr }
+@ Finish pushing all of your registers.
+sub sp, sp, #0x10 @ This will allocate 0x10 bytes of the stack for you.
+```
+The stack is weird because it grows backwards. Don't worry about it. The consequence of this is that we subtract from the stack pointer to give ourselves room to work with.
 
 ### Functions - finishing up
 wip
