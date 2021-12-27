@@ -23,7 +23,7 @@ The register allocations are as follows:
 | r0 - r3  |      | Lo scratch                                 |
 | r4 - r7  |      | Lo nonscratch                              |
 | r8 - r10 |      | Hi nonscratch                              |
-| r11      | fp   | Frame pointer (Functionally hi nonscratch) |
+| r11      | fp   | Frame pointer (functionally hi nonscratch) |
 | r12      | ip   | Hi scratch (intraprocedural longcall)      |
 | r13      | sp   | Stack pointer (reserved)                   |
 | r14      | lr   | Link register (reserved kinda sorta)       |
@@ -184,8 +184,17 @@ If you're working in a debugger and you see what an unknown function returns wit
 If you're glancing at another function's return and see that it uses r1 to return, you know for sure that it does have a return value.
 One of the biggest benefits of consistent convention is that a skilled human can glean numerous clues about a function's behavior from otherwise indecipherable machine code. 
 
-## Things you really really should do
-wip
+## Things you really really should and shouldn't do
+There's a lot of things we've discussed that you absolutely need to keep straight for decent functions.
+Now I'm going to go into a few things that aren't quite as important but should still be considered.
+
+### Only push and pop when you need to
+*But Sneeeeeekkkkkkk, it's easier to just always push r4 - r7 and r14 so I don't have to think about it!*
+Fair enough, but consider:
+ - Anything that loads and stores is a relatively slow process.
+ I know for GBAFE hacking, speed is only terribly relevant in certain situations, so the next reasons are more important practically.
+ - From my experience, if you're not thinking about something in the process of writing code, that's a problem. It's more valuable to be more explicit with everything you do.
+ - It makes your code more readable. A reader would find it more obvious what registers are in use.
 
 ## Helpful methods - keep it consistent! 
 wip
