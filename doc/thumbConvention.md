@@ -208,6 +208,9 @@ I think it's fine, and the important thing is that I've stuck with it for years.
 If your style is consistent, it makes your code more readable!
 Furthermore (especially in a small community of wizards), if you've read a lot of other people's code, you can tell who wrote what you're looking at which is helpful to know.
 
+On the topic of tabbing, I find tabbing for thumb to be useful in a limited way. I tend to for easy logical flow clarification and loops.
+Again (see the pattern?), however you prefer to do it is mostly arbitrary, except it's best to keep it consistent!
+
 ## Helpful methods - keep it consistent! 
 wip
 
