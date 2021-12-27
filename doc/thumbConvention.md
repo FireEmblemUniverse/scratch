@@ -169,7 +169,7 @@ This case does not depend on whether you have a return value.
 pop { r0 }
 bx r0
 ```
-### If you did push lr and you do have a return value
+#### If you did push lr and you do have a return value
 Same as the previous case, except `pop` into and `bx` with r1 so that you don't clobber r0.
 ```
 pop { r1 }
