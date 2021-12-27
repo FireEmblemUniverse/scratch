@@ -196,6 +196,12 @@ Fair enough, but consider:
  - From my experience, if you're not thinking about something in the process of writing code, that's a problem. It's more valuable to be more explicit with everything you do.
  - It makes your code more readable. A reader would find it more obvious what registers are in use.
 
+### Use lyn!
+[lyn](https://feuniverse.us/t/ea-asm-tool-lyn-elf2ea-if-you-will/2986) is a linker by StanH that allows you to assemble your thumb code in a slightly different way than the old fashioned way with `#incbin`ning DMP files.
+lyn makes good use of the ELF object files to allow EA labels to be visible to your thumb code and your thumb labels to be visible to your EA buildfile.
+Older code requires a hacky approach of manually "cooking" the literal pool. lyn handles this more elegantly.
+Because of this, if your code is designed for DMP insertion, it's a headache for other people to modify and reimplement.
+
 ## Helpful methods - keep it consistent! 
 wip
 
