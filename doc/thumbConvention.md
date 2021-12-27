@@ -202,6 +202,12 @@ lyn makes good use of the ELF object files to allow EA labels to be visible to y
 Older code requires a hacky approach of manually "cooking" the literal pool. lyn handles this more elegantly.
 Because of this, if your code is designed for DMP insertion, it's a headache for other people to modify and reimplement.
 
+### Use consistent spacing and tabbing
+If you've worked with thumb before, you've probably noticed that my spacing is weird. To be honest, it's that way because of notepad++ syntax highlighting being weird.
+I think it's fine, and the important thing is that I've stuck with it for years.
+If your style is consistent, it makes your code more readable!
+Furthermore (especially in a small community of wizards), if you've read a lot of other people's code, you can tell who wrote what you're looking at which is helpful to know.
+
 ## Helpful methods - keep it consistent! 
 wip
 
