@@ -215,4 +215,195 @@ Again (see the pattern?), however you prefer to do it is mostly arbitrary, excep
 wip
 
 ## An example function
-wip
+I was recently asked to help an apprentice with a small battle calculation hack: Make thunder tomes deal additional damage (+1/2 user's power stat) to armored units.
+I thought this would be a good opportunity to show what a workflow with good convention looks like. Here's how I start.
+```
+.thumb
+
+.global ThunderBuff
+.type ThunderBuff, %function
+ThunderBuff: @ Called from the prebattle calc loop. r0 and r1 have battle structs to work with.
+```
+This function is called `ThunderBuff`, and the `.global` and `.type` lines are used by lyn to make `ThunderBuff` visible to Event Assembler.
+I intend for this function to be called from the prebattle calc loop. Okay, that has two parameters that are battle struct pointers.
+Let's start with a comment stating exactly how I intend to _use_ this function and what its _parameters_ are.
+```
+.thumb
+
+.global ThunderBuff
+.type ThunderBuff, %function
+ThunderBuff: @ Called from the prebattle calc loop. r0 and r1 have battle structs to work with.
+push { r4, r5 }
+mov r4, r0 @ Battle unit 1.
+mov r5, r1 @ Battle unit 2.
+
+pop { r4, r5 }
+bx lr
+.ltorg
+```
+Next, I consider what I intend to do. I happen to know that (
+[Teq doc](https://www.dropbox.com/sh/zymc1h221nnxpm9/AACrgal3LFRvbDKL-5qDxF3-a/Tequila/Teq%20Doq?dl=0&subfolder_nav_tracking=1)
+is an excellent place for documentation for this kind of thing) that a battle unit pointer + 0x5A (short) has the current damage this unit deals.
+I'll keep that in mind as my goal variable I want to edit. Furthermore, this function has no return value.
+I don't intend on pushing `lr`, so I've chosen the appropriate return signature. I've also gone ahead and pushed `r4` and `r5` and put my parameters in place.
+
+As a quick aside, many functions that are called from the prebattle loop call the parameters "attacker" and "defender," but that's not quite accurate.
+How it works is that the prebattle loop is performed twice:
+Once with `r0` = the _attacker's_ battle struct, `r1` = the _defender's_ battle struct;
+Once with `r0` = the _defender's_ battle struct, `r1` = the _attacker's_ battle struct.
+By consequence, our little function will work on both the attacker and defender.
+If we wanted to make a function that _only_ applied to the attacker, then we would need to explicitly check for the parameters being oriented correctly.
+
+Anyway, we have our basic function, but two more quick things before progressing.
+First, `.ltorg` tells the assembler that it's okay to put a literal pool here. It's good practice to put that at the end of a function, even if it's your only function.
+Secondly,
+### Don't forget .thumb !
+If you don't have `.thumb` at the top of your file, then the assembler will think you're writing ARM! Unless you're weird (like Stan) you're probably not trying to write ARM.
+
+```
+.thumb
+
+.macro blh to, reg
+    ldr \reg, =\to
+    mov lr, \reg
+    .short 0xF800
+.endm
+
+.equ GetItemIndex, 0x80174EC
+
+.global ThunderBuff
+.type ThunderBuff, %function
+ThunderBuff: @ Called from the prebattle calc loop. r0 and r1 have battle structs to work with.
+push { r4, r5, lr }
+mov r4, r0 @ Battle unit 1.
+mov r5, r1 @ Battle unit 2.
+
+@ First, check to see if our unit is using a thunder tome.
+mov r1, #0x4A
+ldrh r0, [ r4, r1 ] @ Equipped weapon.
+blh GetItemIndex, r1
+
+pop { r4, r5 }
+pop { r0 }
+bx r0
+.ltorg
+```
+Woah a lot's happened. What happened? I changed my mind about needing to call a function.
+I've decided that I need to call `GetItemIndex` in order to turn my equipped item/durability short into an item ID. Here's what I did:
+ - I declared my `blh` macro. If you need to longcall with `blh`, you'll need this macro!
+ - I declared what `GetItemIndex` is with `.equ`. Unless you do this, lyn will think that `GetItemIndex` is declared as a label at the EA level (which is likely isn't).
+ - I pushed `lr`. This is necessary if you call a function.
+ - I changed my return signature to account for `lr` being pushed. Note that I still don't have a return value. I just need to `bx` with `r0` instead of with `lr` directly.
+ - I used `blh` to call `GetItemIndex` with `r1`. `blh` needs a free register, and I consistently use the next free scratch register.
+ This isn't a hard convention, but whatever you do, do it consistently!
+
+```
+@ First, check to see if our unit is using a thunder tome.
+mov r1, #0x4A
+ldrh r0, [ r4, r1 ] @ Equipped weapon.
+blh GetItemIndex, r1
+@ Is this item ID a thunder tome?
+ldr r1, =gThunderList @ 0-terminated list of item IDs we consider thunder tomes.
+ThunderLoop:
+	ldrb r2, [ r1 ]
+	cmp r2, #0x00
+	beq End @ This item ID isn't in the list, end.
+	cmp r1, r2
+	bne ThunderLoop @ If these item IDs aren't equivalent, try finding another.
+```
+I haven't changed anything outside of this block - all I've added is this loop. Your function probably has a condition of some sort. Comment as appropriately as you see fit.
+I hope that these comments make it clear what I'm trying to do here. I'm assuming there's a list written in an EA script somewhere in this buildfile looking something like
+```
+gThunderList:
+BYTE Thunder Bolting 0x0
+```
+Because of the magic of lyn, `gThunderList` is visible within our assembly script! I'm checking to see if the equipped item ID is in this list.
+If not, end and do nothing. If so, continue doing things.
+
+```
+@ Is the enemy an armored unit?
+ldr r0, [ r5, #0x04 ] @ Pointer to ROM class data.
+ldrb r0, [ r0, #0x04 ] @ Class ID.
+ldr r1, =gArmorList @ Same idea as before, but we're checking for an armored class ID.
+ArmorLoop:
+	ldrb r2, [ r1 ]
+	cmp r2, #0x00
+	beq End @ This class ID isn't in the list, end.
+	add r1, r1, #0x01
+	cmp r0, r2
+	bne ArmorLoop
+```
+I've now added this loop in order to check for the unit in `r5` being armored. It's the same idea as the thunder condition.
+Notice how I've chosen to format the code in a similar way. This shows that the appearance of the code reflects its function. Overall, this improves readability.
+
+```
+@ Add half pow to the r4 battle unit.
+ldrb r0, [ r4, #0x14 ] @ Power.
+lsr r0, r0, #0x01 @ Divide power by 2.
+mov r2, #0x5A
+ldrh r1, [ r4, r2 ] @ Current attack.
+add r1, r0, r1 @ Add half power to attack.
+strh r1, [ r4, r2 ] @ Store the new attack.
+```
+Finally, I've added this final block that executes the effect, adding half power to attack.
+It's good to leave comments with piecewise calculations like this, especially with bitshifts which are particularly confusing.
+
+With everything said and done, my whole function looks like
+```
+.thumb
+
+.macro blh to, reg
+    ldr \reg, =\to
+    mov lr, \reg
+    .short 0xF800
+.endm
+
+.equ GetItemIndex, 0x80174EC
+
+.global ThunderBuff
+.type ThunderBuff, %function
+ThunderBuff: @ Called from the prebattle calc loop. r0 and r1 have battle structs to work with.
+push { r4, r5, lr }
+mov r4, r0 @ Battle unit 1.
+mov r5, r1 @ Battle unit 2.
+
+@ First, check to see if our unit is using a thunder tome.
+mov r1, #0x4A
+ldrh r0, [ r4, r1 ] @ Equipped weapon.
+blh GetItemIndex, r1
+@ Is this item ID a thunder tome?
+ldr r1, =gThunderList @ 0-terminated list of item IDs we consider thunder tomes.
+ThunderLoop:
+	ldrb r2, [ r1 ]
+	cmp r2, #0x00
+	beq End @ This item ID isn't in the list, end.
+	add r1, r1, #0x01
+	cmp r0, r2
+	bne ThunderLoop @ If these item IDs aren't equivalent, try finding another.
+
+@ Is the enemy an armored unit?
+ldr r0, [ r5, #0x04 ] @ Pointer to ROM class data.
+ldrb r0, [ r0, #0x04 ] @ Class ID.
+ldr r1, =gArmorList @ Same idea as before, but we're checking for an armored class ID.
+ArmorLoop:
+	ldrb r2, [ r1 ]
+	cmp r2, #0x00
+	beq End @ This class ID isn't in the list, end.
+	add r1, r1, #0x01
+	cmp r0, r2
+	bne ArmorLoop
+
+@ Add half pow to the r4 battle unit.
+ldrb r0, [ r4, #0x14 ] @ Power.
+lsr r0, r0, #0x01 @ Divide power by 2.
+mov r2, #0x5A
+ldrh r1, [ r4, r2 ] @ Current attack.
+add r1, r0, r1 @ Add half power to attack.
+strh r1, [ r4, r2 ] @ Store the new attack.
+
+End:
+pop { r4, r5 }
+pop { r0 }
+bx r0
+.ltorg
+```
