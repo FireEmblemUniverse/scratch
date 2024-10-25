@@ -128,33 +128,29 @@ Searching this file now for `Hit`, we get four different results (this is where
 case-sensitive search comes in handy -- when I just press Ctrl-F for "hit" on
 the github webpage, there are over 20 results!):
 
--   The first result is `gMid_Hit`, on [line
-    61](https://github.com/FireEmblemUniverse/fireemblem8u/blob/451cbcd3422bafee61cbced95c15fa78aac14ff8/src/statscreen.c#L61):
-    This is a good start, but it's part of some big complicated struct that I
-    don't understand. It is next to something with the word `LABEL` in it, so
-    maybe this is related to the literal text `Hit` on the statscreen. I still
-    don't know if this draws that entire section, or just the word `Hit`.
+- The first result is `gMid_Hit`, on [line 61](https://github.com/FireEmblemUniverse/fireemblem8u/blob/451cbcd3422bafee61cbced95c15fa78aac14ff8/src/statscreen.c#L61):
+  This is a good start, but it's part of some big complicated struct that I
+  don't understand. It is next to something with the word `LABEL` in it, so
+  maybe this is related to the literal text `Hit` on the statscreen. I still
+  don't know if this draws that entire section, or just the word `Hit`.
 
--   Searching further for `gMid_Hit`, the only other result is `gMid_Hit` and
-    the word `Hit` on [line
-    2875](https://github.com/FireEmblemUniverse/fireemblem8u/blob/451cbcd3422bafee61cbced95c15fa78aac14ff8/src/statscreen.c#L2875).
-    This is some unknown magic number, but I'll make an educated guess that
-    `Mid` is actually `Message ID`, not just an evaluation of my code quality.
-    And indeed, text ID 0x4F4 is the text `Hit`. This means that the entry in
-    the large data structure above is probably *just* for the label.
+- Searching further for `gMid_Hit`, the only other result is `gMid_Hit` and
+  the word `Hit` on [line 2875](https://github.com/FireEmblemUniverse/fireemblem8u/blob/451cbcd3422bafee61cbced95c15fa78aac14ff8/src/statscreen.c#L2875).
+  This is some unknown magic number, but I'll make an educated guess that
+  `Mid` is actually `Message ID`, not just an evaluation of my code quality.
+  And indeed, text ID 0x4F4 is the text `Hit`. This means that the entry in
+  the large data structure above is probably *just* for the label.
 
--   If that data structure above draws the label, then the function that uses it
-    is probably the same function that actually fetches the value. Searching for
-    `sPage1TextInfo` (the name of the struct containing `gMid_Hit` earlier)
-    takes us to the function
-    [`DisplayPage1`](https://github.com/FireEmblemUniverse/fireemblem8u/blob/451cbcd3422bafee61cbced95c15fa78aac14ff8/src/statscreen.c#L717).
+- If that data structure above draws the label, then the function that uses it
+  is probably the same function that actually fetches the value. Searching for
+  `sPage1TextInfo` (the name of the struct containing `gMid_Hit` earlier)
+  takes us to the function [`DisplayPage1`](https://github.com/FireEmblemUniverse/fireemblem8u/blob/451cbcd3422bafee61cbced95c15fa78aac14ff8/src/statscreen.c#L717).
 
--   At this point, I don't think I have much more of a choice but to skim the
-    function. A few lines below, we have `GetUnitEquippedWeaponSlot`, which
-    suggests that we're on the right track. And indeed, just a bit below that,
-    jackpot: on [line
-    766](https://github.com/FireEmblemUniverse/fireemblem8u/blob/451cbcd3422bafee61cbced95c15fa78aac14ff8/src/statscreen.c#L2875),
-    `gBattleActor.battleHitRate`.
+- At this point, I don't think I have much more of a choice but to skim the
+  function. A few lines below, we have `GetUnitEquippedWeaponSlot`, which
+  suggests that we're on the right track. And indeed, just a bit below that,
+  jackpot: on [line 766](https://github.com/FireEmblemUniverse/fireemblem8u/blob/451cbcd3422bafee61cbced95c15fa78aac14ff8/src/statscreen.c#L2875),
+  `gBattleActor.battleHitRate`.
 
 The next step is to figure out what function actually populates the struct
 member `gBattleActor.battleHitRate`, This is bad, because `gBattleActor` isn't
@@ -191,11 +187,11 @@ trying to look through code.
 
 Note that the precise process outlined here was actually quite roundabout:
 
--   We could have skipped reading through `DisplayPage1` simply by giving up on
-    `gMid_Hit` and continuing to search for the word `Hit`, which would have
-    brought us to the use of `battleHitRate`.
--   If I'd then thought to search for `battleHitRate =`, we would have found
-    `ComputeBattleUnitHitRate` right away.
+- We could have skipped reading through `DisplayPage1` simply by giving up on
+  `gMid_Hit` and continuing to search for the word `Hit`, which would have
+  brought us to the use of `battleHitRate`.
+- If I'd then thought to search for `battleHitRate =`, we would have found
+  `ComputeBattleUnitHitRate` right away.
 
 I instead went through the painstaking process of running around through all
 these different functions because that was the *actual path I took* when
