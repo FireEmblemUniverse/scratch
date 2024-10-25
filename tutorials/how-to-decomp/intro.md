@@ -24,6 +24,6 @@ familiarity with C syntax (specifically, you should be able to read C) is
 strongly recommended. You do **not** need to have looked at the decomp before or
 have any familiarity with its structure.
 
-In the interest of not just dumping advice in a vacuum, I've also intended to
-include a few case studies where I was using the decomp myself, with as much of
+In the interest of not just dumping advice in a vacuum, I've also made sure to
+include some case studies where I was using the decomp myself, with as much of
 my scratch work, false starts and dead ends included as I can remember.

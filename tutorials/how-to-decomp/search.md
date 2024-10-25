@@ -94,9 +94,8 @@ drawing board.
 code to edit that value similarly to doing so in the pre-battle loop?")
 
 Our first exploration will be a "where does the number on my screen come
-from"-type question. In my experience, these tend to be pretty low-hanging fruit
-relative to how common they are, so it makes a great "getting your feet
-wet"-type example.
+from"-type question. In my experience, these questions are both very common and
+pretty easy, so perfect for getting your feet wet.
 
 Here, we're looking for the intersection of two systems ("calculating hit" and
 "displaying on the statscreen"), so that suggests two places to begin searching:
@@ -157,7 +156,7 @@ member `gBattleActor.battleHitRate`, This is bad, because `gBattleActor` isn't
 referenced in `statscreen.c` beyond this one function, and `gBattleActor` sounds
 like a variable that is used in a lot of places that I don't want to have to dig
 through (if you were following this conversation on discord, you'd have seen
-that I got stuck here). You could call it a day and simply fire up no\$gba and
+that I got stuck here). You could call it a day and simply fire up no$gba and
 set a breakpoint on `gBattleActor.battleHitRate`, but I find that unsatisfying.
 
 Going back to the call to `GetUnitEquippedWeaponSlot` above, we notice that the
@@ -193,7 +192,7 @@ Note that the precise process outlined here was actually quite roundabout:
 - If I'd then thought to search for `battleHitRate =`, we would have found
   `ComputeBattleUnitHitRate` right away.
 
-I instead went through the painstaking process of running around through all
+We instead went through the painstaking process of running around through all
 these different functions because that was the *actual path I took* when
 searching for the answer to this question. Even I, someone confident enough to
 have wriiten this guide, don't necessarily know ahead of time which paths are
@@ -205,6 +204,17 @@ error, backtracking, and leaps of faith.
 ![image|627x89](where-to-break.png)
 (Image text: "If I wanted to get an address to get a breakpoint at (in this
 instance, it's attacker's battleattack) where would that info be?")
+
+In this case, we're less interested in finding the source of a value, but the
+RAM location of a value itself. While this is exactly the kind of information
+that FEbuilder might have on-hand, let's see if we can find it for ourselves.
+
+Immediately grepping for `attacker` gets... many hits. That doesn't seem like a
+good idea. As a wild guess, let's try `Attacker`, and see if we can hit on a
+useful variable name.
+
+<!--![image]()-->
+(Image: Only a few hits for capital-A "Attacker")
 [/details]
 
 [details=Case Study 3: A smile would be nice]
