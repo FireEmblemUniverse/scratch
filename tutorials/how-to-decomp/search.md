@@ -41,54 +41,54 @@ results might be useful) is more of an art than a science, and the closest
 things to hard rules require you to have some background knowledge about what
 things are called internally. Some basic tips that I've found useful, however:
 
--   The grep-based tools I recommended earlier are case-sensitive by default
-    (meaning `Stat` and `stat` are counted differently). This can be annoying if
-    you don't know the exact capitalization, but it can help separate function
-    names from parameters and locals.
+- The grep-based tools I recommended earlier are case-sensitive by default
+  (meaning `Stat` and `stat` are counted differently). This can be annoying if
+  you don't know the exact capitalization, but it can help separate function
+  names from parameters and locals.
 
--   Keyword searching is both good to learn the names of important parts of code
-    *and* to find where specific functions (or structs, etc) are actually used.
+- Keyword searching is both good to learn the names of important parts of code
+  *and* to find where specific functions (or structs, etc) are actually used.
 
-    If you don't know the name of a specific function, it's likely easier to
-    search in header files only, and on the flip side, you should limit your
-    search to source (`.c`) files if you're looking for how a function is used.
-    A function defined in `foo.h` is usually (but not always!) found in `foo.c`.
+  If you don't know the name of a specific function, it's likely easier to
+  search in header files only, and on the flip side, you should limit your
+  search to source (`.c`) files if you're looking for how a function is used.
+  A function defined in `foo.h` is usually (but not always!) found in `foo.c`.
 
--   Try to search for things that you think will have *fewer* hits (but not
-    zero!) rather than maximize coverage. It will help you narrow down to
-    "useful-looking" code much faster, and it'll be easier to filter out code
-    that definitely isn't relevant. If you're not sure, when in doubt, searching
-    for longer words will give you fewer results.
+- Try to search for things that you think will have *fewer* hits (but not
+  zero!) rather than maximize coverage. It will help you narrow down to
+  "useful-looking" code much faster, and it'll be easier to filter out code
+  that definitely isn't relevant. If you're not sure, when in doubt, searching
+  for longer words will give you fewer results.
 
--   In many cases, seeing how/where a name is *used* is more important than its
-    direct definition. For example, I didn't really need to know that
-    `sMusicProc1` is a `Proc*`, but knowing where this variable gets *assigned
-    to* is probably *very* important. This is where using a regex tool comes in
-    handy -- I could search *specifically* for `sMusicProc1 =`, instead of just
-    all occurrences of `sMusicProc1`.
+- In many cases, seeing how/where a name is *used* is more important than its
+  direct definition. For example, I didn't really need to know that
+  `sMusicProc1` is a `Proc*`, but knowing where this variable gets *assigned
+  to* is probably *very* important. This is where using a regex tool comes in
+  handy -- I could search *specifically* for `sMusicProc1 =`, instead of just
+  all occurrences of `sMusicProc1`.
 
-    ![image\|572x145](upload://8O8wAqCGLe9ILvuKDQDL0p1ZecX.png) (Image: finding
-    all assignments to a specific variable)
+  ![image|572x145](sMusicProc.png) (Image: finding
+  all assignments to a specific variable)
 
--   Some functions have non-descriptive names, like `sub_8084B98`. My heuristic
-    is to ignore these for as long as possible, only really digging in if it's
-    directly called by something relevant, or if it uses a global that I'm
-    interested in.
+- Some functions have non-descriptive names, like `sub_8084B98`. My heuristic
+  is to ignore these for as long as possible, only really digging in if it's
+  directly called by something relevant, or if it uses a global that I'm
+  interested in.
 
--   **It will take multiple tries.** Be persistent; your first guess will
-    usually be wrong. In these cases, try different capitalizations, synonyms
-    for the same words, etc. The decomp *mostly* uses similar terminology to
-    other tools, which can help narrow down the exact phrasing.
+- **It will take multiple tries.** Be persistent; your first guess will
+  usually be wrong. In these cases, try different capitalizations, synonyms
+  for the same words, etc. The decomp *mostly* uses similar terminology to
+  other tools, which can help narrow down the exact phrasing.
 
-    More commonly, you'll search something so general that there are *way* too
-    many results to be useful. I don't know about you, but I do not have the
-    patience to sift through every occurrence of the word "battle" (by my count,
-    973 just in files ending with `.c`). In these cases, I usually look at the
-    first few results and see if the filename looks useful. If not, back to the
-    drawing board.
+More commonly, you'll search something so general that there are *way* too
+many results to be useful. I don't know about you, but I do not have the
+patience to sift through every occurrence of the word "battle" (by my count,
+973 just in files ending with `.c`). In these cases, I usually look at the
+first few results and see if the filename looks useful. If not, back to the
+drawing board.
 
-\[details=Case Study 1: Where to stat\]
-![image\|519x112](upload://3s50LxjbHki6lKoQkKMlGrnXkh9.png)
+[details=Case Study 1: Where to stat]
+![image|519x112](where-to-stat.png)
 
 (Image text: "Where is the statscreen's hit value calculated, and can I insert
 code to edit that value similarly to doing so in the pre-battle loop?")
@@ -111,7 +111,7 @@ specific word, whereas `hit` could be used to mean something other than
 "accuracy". Also, `statscreen` is 10 letters and `hit` is 3 letters. So we're
 going to search for `statscreen` first.
 
-![image\|550x467](upload://eqIN04LuLA0gxlSoVkk9UH6mUNP.png) (Image: Searching
+![image|550x467](statscreenh.png) (Image: Searching
 for "statscreen")
 
 Not pictured: Like, 20 more `#include "statscreen.h"` results.
@@ -198,15 +198,19 @@ these different functions because that was the *actual path I took* when
 searching for the answer to this question. Even I, someone confident enough to
 have wriiten this guide, don't necessarily know ahead of time which paths are
 dead ends or not. The reality is, navigating a large codebase requires trial and
-error, backtracking, and leaps of faith. \[/details\]
+error, backtracking, and leaps of faith.
+[/details]
 
-\[details=Case Study 2: Taking a break\]
-![image\|627x89](upload://bbMkWh2Sdowjd71Hd298B8QCwoB.png) (Image text: "If I
-wanted to get an address to get a breakpoint at (in this instance, it's
-attacker's battleattack) where would that info be?") \[/details\]
+[details=Case Study 2: Taking a break]
+![image|627x89](where-to-break.png)
+(Image text: "If I wanted to get an address to get a breakpoint at (in this
+instance, it's attacker's battleattack) where would that info be?")
+[/details]
 
-\[details=Case Study 3: A smile would be nice\]
-![image\|690x343](upload://pLAdNBIES2YXgj3WSNNTwXLRSQL.jpeg) (Image text,
-paraphrased: "The portrait displayed for the equip/item/trade/etc menu always
-uses the non-smiling closed-mouth frame. Is there some way to change it to
-either use the statscreen mouth frame, or no mouth frame at all?") \[/details\]
+[details=Case Study 3: A smile would be nice]
+![image|690x343](smile-would-be-nice.jpeg)
+
+(Image text, paraphrased: "The portrait displayed for the equip/item/trade/etc
+menu always uses the non-smiling closed-mouth frame. Is there some way to change
+it to either use the statscreen mouth frame, or no mouth frame at all?")
+[/details]
