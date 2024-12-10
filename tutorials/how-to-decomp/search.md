@@ -41,6 +41,18 @@ results might be useful) is more of an art than a science, and the closest
 things to hard rules require you to have some background knowledge about what
 things are called internally. Some basic tips that I've found useful, however:
 
+- **It will take multiple tries.** Be persistent; your first guess will
+  usually be wrong. In these cases, try different capitalizations, synonyms
+  for the same words, etc. The decomp *mostly* uses similar terminology to
+  other tools, which can help narrow down the exact phrasing.
+
+- You'll often search something so general that there are *way* too
+  many results to be useful. I don't know about you, but I do not have the
+  patience to sift through every occurrence of the word "battle" (by my count,
+  973 just in files ending with `.c`). In these cases, I usually look at the
+  first few results and see if the filename looks useful. If not, back to the
+  drawing board.
+
 - The grep-based tools I recommended earlier are case-sensitive by default
   (meaning `Stat` and `stat` are counted differently). This can be annoying if
   you don't know the exact capitalization, but it can help separate function
@@ -61,11 +73,11 @@ things are called internally. Some basic tips that I've found useful, however:
   for longer words will give you fewer results.
 
 - In many cases, seeing how/where a name is *used* is more important than its
-  direct definition. For example, I didn't really need to know that
-  `sMusicProc1` is a `Proc*`, but knowing where this variable gets *assigned
-  to* is probably *very* important. This is where using a regex tool comes in
-  handy -- I could search *specifically* for `sMusicProc1 =`, instead of just
-  all occurrences of `sMusicProc1`.
+  direct definition. For example, I don't really need to pull up the decomp to
+  know that `sMusicProc1` is a `Proc*`, but knowing where this variable gets
+  *assigned to* is probably *very* important. This is where using a regex tool
+  comes in handy -- I could search *specifically* for `sMusicProc1 =`, instead
+  of just all occurrences of `sMusicProc1`.
 
   ![image|572x145](sMusicProc.png) (Image: finding
   all assignments to a specific variable)
@@ -75,17 +87,7 @@ things are called internally. Some basic tips that I've found useful, however:
   directly called by something relevant, or if it uses a global that I'm
   interested in.
 
-- **It will take multiple tries.** Be persistent; your first guess will
-  usually be wrong. In these cases, try different capitalizations, synonyms
-  for the same words, etc. The decomp *mostly* uses similar terminology to
-  other tools, which can help narrow down the exact phrasing.
-
-More commonly, you'll search something so general that there are *way* too
-many results to be useful. I don't know about you, but I do not have the
-patience to sift through every occurrence of the word "battle" (by my count,
-973 just in files ending with `.c`). In these cases, I usually look at the
-first few results and see if the filename looks useful. If not, back to the
-drawing board.
+Beyond keyword searches, the name of the game is **small bites**.
 
 [details=Case Study 1: Where to stat]
 ![image|519x112](where-to-stat.png)
@@ -93,11 +95,11 @@ drawing board.
 (Image text: "Where is the statscreen's hit value calculated, and can I insert
 code to edit that value similarly to doing so in the pre-battle loop?")
 
-Our first exploration will be a "where does the number on my screen come
-from"-type question. In my experience, these questions are both very common and
-pretty easy, so perfect for getting your feet wet.
+This is a "where does the number come from"-type question. In my experience,
+these questions are both very common and have a few different routes to get to
+the right answer.
 
-Here, we're looking for the intersection of two systems ("calculating hit" and
+We're looking for the intersection of two systems ("calculating hit" and
 "displaying on the statscreen"), so that suggests two places to begin searching:
 
 -   Look for code that computes hit in general, then find where the statscreen
@@ -181,9 +183,6 @@ which sure sounds like the end of our quest.
 
 ## Reflection
 
-Hopefully by now, you should have a pretty good idea of my thought process when
-trying to look through code.
-
 Note that the precise process outlined here was actually quite roundabout:
 
 - We could have skipped reading through `DisplayPage1` simply by giving up on
@@ -194,33 +193,35 @@ Note that the precise process outlined here was actually quite roundabout:
 
 We instead went through the painstaking process of running around through all
 these different functions because that was the *actual path I took* when
-searching for the answer to this question. Even I, someone confident enough to
-have wriiten this guide, don't necessarily know ahead of time which paths are
-dead ends or not. The reality is, navigating a large codebase requires trial and
-error, backtracking, and leaps of faith.
+searching for the answer to this question.
 [/details]
 
-[details=Case Study 2: Taking a break]
-![image|627x89](where-to-break.png)
-(Image text: "If I wanted to get an address to get a breakpoint at (in this
-instance, it's attacker's battleattack) where would that info be?")
-
-In this case, we're less interested in finding the source of a value, but the
-RAM location of a value itself. While this is exactly the kind of information
-that FEbuilder might have on-hand, let's see if we can find it for ourselves.
-
-Immediately grepping for `attacker` gets... many hits. That doesn't seem like a
-good idea. As a wild guess, let's try `Attacker`, and see if we can hit on a
-useful variable name.
-
-<!--![image]()-->
-(Image: Only a few hits for capital-A "Attacker")
-[/details]
-
-[details=Case Study 3: A smile would be nice]
+[details=Case Study 2: A smile would be nice]
 ![image|690x343](smile-would-be-nice.jpeg)
 
 (Image text, paraphrased: "The portrait displayed for the equip/item/trade/etc
 menu always uses the non-smiling closed-mouth frame. Is there some way to change
 it to either use the statscreen mouth frame, or no mouth frame at all?")
+
+Here, we're looking for something that is different between the statscreen and
+the trade menu. Since we *just* got finished looking at `statscreen.c`, let's
+take a wild stab in the dark and open that and look for anything useful.
+
+![image](statscreen-portrait.png)
+
+(Image: Searching for "Portrait" in `statscreen.c`, only two results)
+
+Lucky! Not only are there only two results, they're both in the same function!
 [/details]
+
+Hopefully by now, you should have some idea of my thought process when doing
+decomp research. Notice that at no point did I try to read more than a few lines
+of code at a time
+I've done my best to write down as many concrete tips as I can
+think of, but as you get more comfortable with the code itself, you'll start
+developing a bit of your own sense for what might be useful that can't really
+be expressed over text.
+
+In the next chapter, we'll look into using the decomp in a more involved way,
+particularly using it as a reference to reverse-engineer others' handwritten
+assembly.

@@ -8,15 +8,24 @@ hard to navigate and intimidating to get started with. This guide aims to be a
 starting point by giving some strategies for navigating and thinking about the
 decomp.
 
-This is **not** an informational reference; don't expect to walk away knowing
-exactly what functions are in `src/bmcontainer.c` or what order the battle
-calculations get performed in. Ideally, this advice should help you become more
-comfortable with finding those answers for yourself.
-
 Now, there is no shortage of very comprehensive documentation floating all over
 this site, and you can skip a lot of the busywork with prior knowledge of those.
 If FEBuilder has the answer, then by all means, check there first. For
 completeness, however, I'll be documenting the process "from scratch".
+
+This is **not** an informational reference; don't expect to walk away knowing
+exactly what functions are in `src/bmcontainer.c` or what order the battle
+calculations get performed in. This is also **not** a step-by-step tutorial.
+There *is* no universal way to "use the decomp" -- it will depend heavily on
+what you're actually trying to do. There are many ways to "use" the decomp
+beyond what is outlined here, most of which I'm not qualified to write about.
+
+What this text **does** aim to do is provide tools for breaking down the
+decomp into smaller, more manageable pieces. The reality is, navigating a large
+codebase requires trial and error, backtracking, and more than a few leaps of
+faith. Instead of memorizing tiny details (which I don't find to be all that
+helpful anyway), the focus is on strategy - what questions to ask and how to
+connect the dots to reach the answers for yourself.
 
 **Audience check**: This text is intended for readers with some experience
 writing small- to moderately-complex custom features in assembly or C. Basic
