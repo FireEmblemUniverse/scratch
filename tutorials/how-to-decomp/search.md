@@ -87,7 +87,18 @@ things are called internally. Some basic tips that I've found useful, however:
   directly called by something relevant, or if it uses a global that I'm
   interested in.
 
-Beyond keyword searches, the name of the game is **small bites**.
+Beyond keyword searches, the name of the game is **small bites**. While
+sometimes reading a lot of code is unavoidable, you'd be surprised how far you
+can get with intelligent guesses and only reading a few lines of context, which
+saves a lot of time in the long run.
+
+When reading these two case studies, I strongly suggest that you follow along
+and think about what *your* next steps might be, and how you might be able to
+skip some of my research by cross-referencing FEBuilder or other communal
+documentation. I've built up all sorts of internal heuristics over the years
+that point me in certain directions (right or wrong), many of which are so
+ingrained that I can't explain them to you, so your goal should be to build up
+*your own* sense of what to do next, which only comes from experience.
 
 [details=Case Study 1: Where to stat]
 ![image|519x112](where-to-stat.png)
@@ -158,7 +169,7 @@ member `gBattleActor.battleHitRate`, This is bad, because `gBattleActor` isn't
 referenced in `statscreen.c` beyond this one function, and `gBattleActor` sounds
 like a variable that is used in a lot of places that I don't want to have to dig
 through (if you were following this conversation on discord, you'd have seen
-that I got stuck here). You could call it a day and simply fire up no$gba and
+that I got stuck here). You could call it a day and simply fire up no\$gba and
 set a breakpoint on `gBattleActor.battleHitRate`, but I find that unsatisfying.
 
 Going back to the call to `GetUnitEquippedWeaponSlot` above, we notice that the
@@ -203,24 +214,102 @@ searching for the answer to this question.
 menu always uses the non-smiling closed-mouth frame. Is there some way to change
 it to either use the statscreen mouth frame, or no mouth frame at all?")
 
-Here, we're looking for something that is different between the statscreen and
-the trade menu. Since we *just* got finished looking at `statscreen.c`, let's
-take a wild stab in the dark and open that and look for anything useful.
+Here, we're looking for something that is different between two different
+menus. Since we *just* got finished looking at `statscreen.c`, let's open that
+and look for anything useful.
 
 ![image](statscreen-portrait.png)
 
 (Image: Searching for "Portrait" in `statscreen.c`, only two results)
 
 Lucky! Not only are there only two results, they're both in the same function!
+
+Scrolling a little further down, we find the suggestively-named function
+[`PutFace80x72`](https://github.com/FireEmblemUniverse/fireemblem8u/blob/1193deefdd322c261df42d561e21002957ccc08d/src/statscreen.c#L1617). I'm still not entirely sure what all
+these parameters are, but I'd guess that it puts a face of size 80x72 somewhere.
+Maybe this gets used somewhere related to trading?
+
+As it turns out, this doesn't go anywhere. I won't waste your time by retracing
+the hour I spent following this line of inquiry, but suffice to say that I got
+as far as seeing `PutFace80x72` in something related to stealing in `bmmenu.c`,
+then tried digging around that file to find where it drew the trade menu to
+no avail. It's possible one of the functions there would have brought us to the
+right place, but there's a *lot* there.
+
+Instead, let's take a step back. We now know that `Face` is the term used
+internally in at least one place. `PutFace` doesn't help either, and `Face`
+gives far too many hits to be useful.
+
+What about something more specific? Well, I spy `bmtrade.h` in the headers, and
+a corresponding `bmtrade.c`. Searching for `Face` in that file gives pleasantly
+few results:
+
+![image](tradeface.png)
+
+(Image: Pleasantly few results)
+
+The only one that seems useful is `StartFace`. Looking back, it would also be
+reasonable to guess that `SetFaceBlinkControlById` might be related, but at the
+time I assumed (correctly, as it turned out) that it only controlled, well,
+blinking.
+
+So, what about `StartFace`? Reading that does a bunch of proc stuff, deals
+with some graphics, and I'd really like to avoid having to unwind that if I
+have to. The names of the parameters aren't particularly helpful, either:
+
+![image](startface.png)
+
+(Image: `StartFace` parameters don't have useful names)
+
+Instead, let's take a wild stab in the dark and look for `Smile`.
+
+If you run this search (image omitted, there's a lot of results and you get
+the picture), you'll find references to the text control code `ToggleSmile`.
+Searching for *that* (restricted to C files only) brings us to [scene.c](https://github.com/FireEmblemUniverse/fireemblem8u/blob/1193deefdd322c261df42d561e21002957ccc08d/src/scene.c#L848),
+which gives us the name `faceSmileEnabled`. From there, we can find [this](https://github.com/FireEmblemUniverse/fireemblem8u/blob/1193deefdd322c261df42d561e21002957ccc08d/src/scene.c#L2072)
+call to `SetFaceDisplayBits`, above which contains something about [`FACE_DISP_SMILE`](https://github.com/FireEmblemUniverse/fireemblem8u/blob/1193deefdd322c261df42d561e21002957ccc08d/src/scene.c#L2070).
+
+Now, we could keep digging, but I'm not sure that'll be helpful --
+`FACE_DISP_SMILE` is a bitmask (you can tell because it's used as an argument
+to something talking about `Bits`), and I'm sure it's used in all sorts of
+places that are unhelpful to us.
+
+There's another way to make forward progress, but it involves making a few
+educated guesses and bringing together all the information we have. The linked
+line assigns to a variable called `disp`, which is incidentally the name of
+the last parameter in `StartFaceAuto`. The non-Auto `StartFace` has a parameter
+named `displayType`, but the `StartFaceAuto` simply [passes it through](https://github.com/FireEmblemUniverse/fireemblem8u/blob/1193deefdd322c261df42d561e21002957ccc08d/src/face.c#L369),
+so they're the same thing. So it's likely that the last parameter to `StartFace`
+has something to do with smiling.
+
+And indeed, if you change the `3` on [this line](https://github.com/FireEmblemUniverse/fireemblem8u/blob/1193deefdd322c261df42d561e21002957ccc08d/src/bmtrade.c#L370) to
+`3 | FACE_DISP_SMILE`, you'll find that one unit is now smiling.
+
+It remains to find all the places that you might want to toggle smiling. I leave
+that as an exercise to you (searching for `StartFace` doesn't give too many
+results, expecially if you realize that `eventscr.c` is probably not related to
+weapon selection).
+
+## Reflection
+
+This time, I skimmed many of the details of filtering useful search results,
+partially to avoid repeating myself and partially because there often weren't
+that many. On the flip side, however, many of the searches didn't directly
+*get* us anywhere. We had to search for many different terms, change direction
+a few times, and only at the end were we able to bring it all together to get
+to an answer.
+
+This search is also incomplete -- it's very possible that there's a place
+drawing a face that *doesn't* go through `StartFace`. Unfortunately, there's
+no great way to know *for sure* that you've stamped out everything, beyond
+extensive testing.
 [/details]
 
 Hopefully by now, you should have some idea of my thought process when doing
-decomp research. Notice that at no point did I try to read more than a few lines
-of code at a time
-I've done my best to write down as many concrete tips as I can
-think of, but as you get more comfortable with the code itself, you'll start
-developing a bit of your own sense for what might be useful that can't really
-be expressed over text.
+decomp research. I've done my best to write down as many concrete tips as I can
+but I want to reiterate that these are a **starting point** for your own
+process (which can and *should* involve cross-referencing other kinds of
+documentation, which I've intentionally avoided doing for these examples).
 
 In the next chapter, we'll look into using the decomp in a more involved way,
 particularly using it as a reference to reverse-engineer others' handwritten
