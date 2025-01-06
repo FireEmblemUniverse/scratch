@@ -1,9 +1,8 @@
 # Reverse Engineering
 
-Cool, we know how to look at vanilla code. But that's not all that useful when
-90% of projects these days are using the SkillSystem(s) patch, and are
-otherwise so covered by patches written in 2017 that the decomp won't be
-helpful, right...?
+Cool, we know how to look at vanilla code. Unfortunately, there's a lot of
+projects running around using SkillSystem(s), and half the code we'd want to
+look up is hooked into by assembly patches written in 2016. What to do?
 
 As it turns out, the decomp is *great* for understanding other people's custom
 code, even if that code is written in assembly!
@@ -19,11 +18,11 @@ If either of those are what you're looking for, I'd instead recommend:
 
 Moving on, I have a confession. I *hate* dealing with assembly. Reading it
 gives me a headache, and I find writing it to be frustrating at the best of
-times. I also don't really find debuggers to be particularly fun to use, even
-though I've had to get good at them over my tenure.
+times. I also don't find debuggers to be particularly fun to use, though they
+genuinely can make your life easier once you reach some cursory familiarity.
 
-And yet, in this hobby, the current reality is that there's a lot of assembly
+Unfortunately, the current reality is that there's a lot of assembly
 flying around. There are efforts to "modernize" and rewrite old functionality
 in C, but my money is that the use of assembly in GBAFE hacking will probably
-outlive my presence in this community. And so, it pays to know how to draw
-parallels from someone else's assembly to high-level C.
+outlive my presence in this community. So it pays to know how to use insights
+from high-level C to understand someone else's hand-written ASM.
